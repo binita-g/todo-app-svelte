@@ -3,7 +3,7 @@
     import { createEventDispatcher } from 'svelte';
 
     const dispatch = createEventDispatcher();
-    
+
     function remove() {
 		dispatch('remove', { id });
 	}
