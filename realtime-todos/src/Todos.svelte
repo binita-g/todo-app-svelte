@@ -1,6 +1,6 @@
 <script async>
     import TodoItem from './TodoItem.svelte';
-    import { getFirestore, doc, deleteDoc, getDoc } from "firebase/firestore";
+    import { doc, deleteDoc } from "firebase/firestore";
     import { db } from './firebase';
 
     // User ID passed from parent
@@ -8,9 +8,11 @@
 
     // Form Text
     let text = 'some task';
+
+    // Create empty todos iterable and append to it
     let todos = [];
 
-    // Query requires an index, see screenshot below
+    // Append to todos iterable from database collection
     db.collection("todos").where("uid", "==", uid)
         .get()
         .then((querySnapshot) => {
@@ -25,8 +27,7 @@
             });
         })
     
-        console.log('!',todos)
-
+    // Add new item to database collection with user's id, text of task, completion status, and date creation
     function add() {
         db.collection('todos').add({ uid, text, complete: false, created: Date.now() })
             .then(function(docRef) {
@@ -35,15 +36,16 @@
         text = '';
     }
 
+    // Update item's status to completed or not
     function updateStatus(event) {
         const { id, newStatus } = event.detail;
         console.log(id);
         db.collection('todos').doc(`${event.detail.id}`).update({ complete: newStatus });
     }
 
+    // Delete a task
     function removeItem(event) {
         const { id } = event.detail;
-        console.log("WHAT", id);
         const docRef = doc(db, 'todos', `${id}`);
 
         deleteDoc(docRef).then(() => {
@@ -60,6 +62,7 @@
 </style>
 
 <ul>
+    <!-- Populate list with todos -->
 	{#each [...todos] as todo}
         <TodoItem {...todo} on:remove={removeItem} on:toggle={updateStatus} />
 	{/each}
