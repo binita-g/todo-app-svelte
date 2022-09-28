@@ -1,5 +1,6 @@
 <script async>
     import TodoItem from './TodoItem.svelte';
+    import { getFirestore, doc, deleteDoc, getDoc } from "firebase/firestore";
     import { db } from './firebase';
 
     // User ID passed from parent
@@ -15,26 +16,40 @@
         .then((querySnapshot) => {
             querySnapshot.forEach((doc) => {
                 console.log(doc.data())
-                todos = [...todos, doc.data()];
+                todos.push({
+                    id: doc.id,
+                    text: doc.data().text,
+                    complete: doc.data().complete
+                })
                 todos = todos;
             });
         })
+    
+        console.log('!',todos)
 
     function add() {
-        db.collection('todos').add({ uid, text, complete: false, created: Date.now() });
+        db.collection('todos').add({ uid, text, complete: false, created: Date.now() })
+            .then(function(docRef) {
+                console.log("Document written with ID: ", docRef.id);
+            });
         text = '';
     }
 
     function updateStatus(event) {
         const { id, newStatus } = event.detail;
-        console.log('EVENT', event.detail)
-        db.collection('todos').doc(id).update({ complete: newStatus });
+        console.log(id);
+        db.collection('todos').doc(`${event.detail.id}`).update({ complete: newStatus });
     }
 
     function removeItem(event) {
         const { id } = event.detail;
-        console.log('EVENT', event.detail)
-        db.collection('todos').doc(id).delete();
+        console.log("WHAT", id);
+        const docRef = doc(db, 'todos', `${id}`);
+
+        deleteDoc(docRef).then(() => {
+            console.log("Entire Document has been deleted successfully.")
+            todos = todos;
+        })
     }
 
     todos = todos;
